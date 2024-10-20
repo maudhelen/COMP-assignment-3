@@ -15,7 +15,8 @@ export default function ProjectsList() {
     const fetchProjects = async () => {
       try {
         const data = await getProjects();  // Fetch projects from the API
-        setProjects(data);  // Set projects state
+        const publishedProjects = data.filter(project => project.is_published);  // Filter only published projects
+        setProjects(publishedProjects);  // Set projects state
       } catch (error) {
         console.error('Error fetching projects:', error);
         setError('Failed to fetch projects');
