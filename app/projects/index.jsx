@@ -54,7 +54,10 @@ export default function ProjectsList() {
           <TouchableOpacity
             key={project.id}
             style={styles.projectButton}
-            onPress={() => router.push(`/projects/${project.id}`)}
+            onPress={() => {
+              const serializedProject = encodeURIComponent(JSON.stringify(project));
+              router.push(`/projects/${project.id}?projectData=${serializedProject}`);
+            }}
           >
             <Text style={styles.projectName}>{project.title}</Text>
             <View style={styles.participantsPill}>
@@ -76,7 +79,7 @@ const styles = StyleSheet.create({
   projectButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',  // Center align items vertically
+    alignItems: 'center',
     backgroundColor: '#ff69b4',
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -87,14 +90,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#fff',
-    marginRight: 10,  // Add space to the right of the project name
+    marginRight: 10,
   },
   participantsPill: {
     backgroundColor: '#fff',
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 20,
-    marginLeft: 10,  // Add space to the left of the pill
+    marginLeft: 10,
   },
   participantsText: {
     color: '#ff69b4',

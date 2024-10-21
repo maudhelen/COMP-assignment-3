@@ -1,25 +1,86 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
 import { globalStyles } from '../../styles';
+import { useLocalSearchParams } from 'expo-router';
+import { getProject } from '../../services/api';  // Assume this function fetches a project by ID
 
-export default function ProjectHome({ route }) {
-  // Example project name, ideally passed from route params or state
-  const projectName = "Project Alpha";  // Replace this with dynamic data
+export default function ProjectHome() {
+  // Retrieve projectId from URL params
+  const { projectId } = useLocalSearchParams();
+  console.log("projectId", projectId);  
+  const [project, setProject] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch project data when the component mounts
+  useEffect(() => {
+    const fetchProjectData = async () => {
+      try {
+        const fetchedProject = await getProject(projectId);
+        console.log("fetchedProject", fetchedProject);  
+        setProject(fetchedProject[0]);
+      } catch (error) {
+        console.error('Error fetching project:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (projectId) {
+      fetchProjectData();
+    }
+  }, [projectId]);
+
+  // Show loading indicator while fetching project data
+  if (loading) {
+    return (
+      <SafeAreaView style={globalStyles.container}>
+        <ActivityIndicator size="large" color="#ff69b4" />
+      </SafeAreaView>
+    );
+  }
+
+  // If no project data is found, show an error message
+  if (!project) {
+    return (
+      <SafeAreaView style={globalStyles.container}>
+        <Text style={styles.errorText}>Project not found</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={globalStyles.container}>
       {/* Project Banner */}
       <View style={styles.banner}>
-        <Text style={styles.bannerText}>{projectName}</Text>
+        <Text style={styles.bannerText}>{project.title ? project.title : 'Project'}</Text>
       </View>
 
       {/* Instruction Box */}
       <View style={styles.instructionBox}>
         <Text style={styles.instructionTitle}>Instructions</Text>
         <Text style={styles.instructionContent}>
-          Find the initial clue near the entrance of the park. You will need to solve it to move forward!
+          {project.instructions || 'No instructions provided.'}
         </Text>
-              {/* Bottom Boxes */}
+
+        {/* Initial Clue */}
+        <Text style={styles.instructionTitle}>Initial Clue</Text>
+        <Text style={styles.instructionContent}>
+          {project.initial_clue || 'No initial clue available.'}
+        </Text>
+
+        {/* Description */}
+        <Text style={styles.instructionTitle}>Description</Text>
+        <Text style={styles.instructionContent}>
+          {project.description || 'No description available.'}
+        </Text>
+
+        {/* Scoring */}
+        <Text style={styles.instructionTitle}>Scoring</Text>
+        <Text style={styles.instructionContent}>
+          {project.participant_scoring || 'No scoring information available.'}
+        </Text>
+
+        {/* Bottom Boxes */}
         <View style={styles.bottomContainer}>
           <View style={styles.bottomBox}>
             <Text style={styles.bottomBoxText}>Points 0 / 10</Text>
@@ -29,7 +90,6 @@ export default function ProjectHome({ route }) {
           </View>
         </View>
       </View>
-
     </SafeAreaView>
   );
 }
@@ -67,6 +127,7 @@ const styles = StyleSheet.create({
   instructionContent: {
     fontSize: 16,
     color: '#555',
+    marginBottom: 10,
   },
   bottomContainer: {
     flexDirection: 'row',
@@ -85,5 +146,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
   },
 });

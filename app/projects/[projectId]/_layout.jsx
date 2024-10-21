@@ -1,8 +1,15 @@
-import { Tabs } from 'expo-router';
+import { Tabs, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { DrawerToggleButton } from '@react-navigation/drawer';
 
 export default function ProjectTabsLayout() {
+  const { projectId } = useLocalSearchParams(); // Get projectId from params
+
+  if (!projectId) {
+    console.error("No projectId provided in route params");
+    return null; // Ensure that projectId is available
+  }
+
   return (
     <Tabs
       screenOptions={{
@@ -17,7 +24,8 @@ export default function ProjectTabsLayout() {
           tabBarIcon: ({ color }) => <Feather name="home" size={24} color={color} />,
           tabBarLabel: 'Home',
           headerTitle: 'Project Home',
-        }} 
+        }}
+        initialParams={{ projectId }} // Pass projectId to home tab
       />
 
       {/* Map Tab */}
@@ -27,7 +35,8 @@ export default function ProjectTabsLayout() {
           tabBarIcon: ({ color }) => <Feather name="map" size={24} color={color} />,
           tabBarLabel: 'Map',
           headerTitle: 'Map',
-        }} 
+        }}
+        initialParams={{ projectId }} // Pass projectId to map tab
       />
 
       {/* QR Code Scanner Tab */}
@@ -37,7 +46,8 @@ export default function ProjectTabsLayout() {
           tabBarIcon: ({ color }) => <Feather name="camera" size={24} color={color} />,
           tabBarLabel: 'QR',
           headerTitle: 'QR Code Scanner',
-        }} 
+        }}
+        initialParams={{ projectId }} // Pass projectId to QR tab
       />
     </Tabs>
   );
