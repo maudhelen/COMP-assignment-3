@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import React, { useEffect } from "react";
 import { Drawer } from "expo-router/drawer";
 import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
@@ -7,9 +7,7 @@ import { usePathname, router } from "expo-router";
 import { globalStyles } from './styles';
 import { DataProvider } from './context/DataContext';
 
-
-
-const participant_username = "jane_doe"; // Replace this with dynamic data
+const participant_username = "maud_helen_longusernameexample"; // Replace this with dynamic data
 
 const CustomDrawerContent = (props) => {
   const pathname = usePathname();
@@ -22,17 +20,17 @@ const CustomDrawerContent = (props) => {
     <DataProvider>
       <DrawerContentScrollView {...props}>
         {/* App Name Section */}
-        <View style={globalStyles.appNameContainer}>
-          <Text style={globalStyles.appName}>StoryPath</Text>
+        <View style={[globalStyles.appNameContainer, styles.darkPinkBackground]}>
+          <Text style={[globalStyles.appName, styles.whiteText]}>StoryPath</Text>
         </View>
 
         {/* Horizontal Line */}
         <View style={globalStyles.separatorLine} />
 
         {/* User Info Section */}
-        <View style={globalStyles.userInfoContainer}>
-          <Feather name="user" size={32} color="#ff69b4" />
-          <Text style={globalStyles.usernameText}>
+        <View style={[globalStyles.userInfoContainer, styles.darkPinkBackground]}>
+          <Feather name="user" size={32} color="#fff" />
+          <Text style={[globalStyles.usernameText, styles.whiteText]}>
             Current User: {participant_username}
           </Text>
         </View>
@@ -43,7 +41,7 @@ const CustomDrawerContent = (props) => {
             <Feather
               name="home"
               size={size}
-              color={pathname === "/" ? "#fff" : "#ff69b4"}
+              color={pathname === "/" ? "#fff" : "#ff69b4"}  // Dark pink
             />
           )}
           label={"Welcome"}
@@ -56,7 +54,7 @@ const CustomDrawerContent = (props) => {
             { backgroundColor: pathname === "/" ? "#ff69b4" : "#fff" },
           ]}
           onPress={() => {
-            router.push("/");  // Navigate to index.jsx (root "/")
+            router.push("/");
           }}
         />
         <DrawerItem
@@ -77,7 +75,7 @@ const CustomDrawerContent = (props) => {
             { backgroundColor: pathname === "/profile" ? "#ff69b4" : "#fff" },
           ]}
           onPress={() => {
-            router.push("/profile");  // Navigate to profile.jsx ("/profile")
+            router.push("/profile");
           }}
         />
         <DrawerItem
@@ -98,7 +96,7 @@ const CustomDrawerContent = (props) => {
             { backgroundColor: pathname.startsWith("/projects") ? "#ff69b4" : "#fff" },
           ]}
           onPress={() => {
-            router.push("/projects");  // Navigate to projects/index.jsx ("/projects")
+            router.push("/projects");
           }}
         />
         <DrawerItem
@@ -119,13 +117,28 @@ const CustomDrawerContent = (props) => {
             { backgroundColor: pathname === "/about" ? "#ff69b4" : "#fff" },
           ]}
           onPress={() => {
-            router.push("/about");  // Navigate to about.jsx ("/about")
+            router.push("/about");
           }}
         />
       </DrawerContentScrollView>
     </DataProvider>
   );
 };
+
+// Styles for dark pink color and text wrapping
+const styles = StyleSheet.create({
+  darkPinkBackground: {
+    backgroundColor: '#ff69b4', 
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  whiteText: {
+    color: '#fff',
+    flexWrap: 'wrap',
+    flexShrink: 1,  // Allow text to shrink and wrap within the container
+  },
+});
 
 export default function Layout() {
   return (
@@ -138,7 +151,7 @@ export default function Layout() {
         options={{ headerShown: true, headerTitle: "Welcome" }}
       />
       <Drawer.Screen
-        name="projects/index"  // Updated to match the path
+        name="projects/index"
         options={{ headerShown: true, headerTitle: "Projects" }}
       />
       <Drawer.Screen
