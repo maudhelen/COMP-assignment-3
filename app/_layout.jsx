@@ -1,39 +1,44 @@
-import { View, Text, StyleSheet } from "react-native";
-import React, { useEffect } from "react";
+import { View, Text, StyleSheet, Image } from "react-native";
+import React, { useEffect, useContext } from "react";
 import { Drawer } from "expo-router/drawer";
 import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
 import { Feather } from "@expo/vector-icons";
 import { usePathname, router } from "expo-router";
 import { globalStyles } from './styles';
-import { DataProvider } from './context/DataContext';
-
-const participant_username = "maud_helen_longusernameexample"; // Replace this with dynamic data
+import { DataProvider, DataContext } from './context/DataContext';  // Import DataContext
 
 const CustomDrawerContent = (props) => {
   const pathname = usePathname();
+  const { user, userAvatar } = useContext(DataContext);  // Access username and avatar
 
   useEffect(() => {
-    console.log("Current Path", pathname);
+    console.log("Current Path:", pathname);
   }, [pathname]);
 
   return (
-    <DataProvider>
-      <DrawerContentScrollView {...props}>
-        {/* App Name Section */}
-        <View style={[globalStyles.appNameContainer, styles.darkPinkBackground]}>
-          <Text style={[globalStyles.appName, styles.whiteText]}>StoryPath</Text>
-        </View>
+    <DrawerContentScrollView {...props}>
+      {/* App Name Section */}
+      <View style={[globalStyles.appNameContainer, styles.darkPinkBackground]}>
+        <Text style={[globalStyles.appName, styles.whiteText]}>StoryPath</Text>
+      </View>
 
-        {/* Horizontal Line */}
-        <View style={globalStyles.separatorLine} />
+      {/* Horizontal Line */}
+      <View style={globalStyles.separatorLine} />
 
-        {/* User Info Section */}
-        <View style={[globalStyles.userInfoContainer, styles.darkPinkBackground]}>
-          <Feather name="user" size={32} color="#fff" />
-          <Text style={[globalStyles.usernameText, styles.whiteText]}>
-            Current User: {participant_username}
-          </Text>
-        </View>
+      {/* User Info Section */}
+      <View style={[globalStyles.userInfoContainer, styles.darkPinkBackground]}>
+        {userAvatar ? (
+          <Image
+            source={{ uri: userAvatar }}
+            style={styles.userAvatar}
+          />
+        ) : (
+          <Feather name="user" size={32} color="#fff" style={styles.userIcon} />
+        )}
+        <Text style={[globalStyles.usernameText, styles.whiteText]}>
+          Current User: {user || 'Guest'}
+        </Text>
+      </View>
 
         {/* Drawer Items */}
         <DrawerItem
@@ -121,7 +126,6 @@ const CustomDrawerContent = (props) => {
           }}
         />
       </DrawerContentScrollView>
-    </DataProvider>
   );
 };
 
@@ -142,6 +146,7 @@ const styles = StyleSheet.create({
 
 export default function Layout() {
   return (
+    <DataProvider>
     <Drawer
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{ headerShown: false }}
@@ -163,5 +168,6 @@ export default function Layout() {
         options={{ headerShown: true, headerTitle: "About" }}
       />
     </Drawer>
+    </DataProvider>
   );
 }

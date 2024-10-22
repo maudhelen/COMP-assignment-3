@@ -1,31 +1,15 @@
-// context/DataContext.js
-import React, { createContext, useState, useEffect } from 'react';
-import { getProjects } from '../services/api';
+import React, { createContext, useState } from 'react';
 
+// Create the context
 export const DataContext = createContext();
 
+// Create the provider component
 export const DataProvider = ({ children }) => {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const projectsData = await getProjects();
-        setProjects(projectsData);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const [user, setUser] = useState('');
+  const [userAvatar, setUserAvatar] = useState('');  // New state for photo
 
   return (
-    <DataContext.Provider value={{ projects, loading, error }}>
+    <DataContext.Provider value={{ user, setUser, userAvatar, setUserAvatar }}>
       {children}
     </DataContext.Provider>
   );

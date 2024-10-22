@@ -74,4 +74,13 @@ export const globalStyles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#ff69b4',
   },
+  userAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  userIcon: {
+    marginRight: 10,
+  },
 });
