@@ -152,3 +152,53 @@ export async function deleteAllLocations(projectId) {
 export async function updateLocation(id, updatedLocationData) {
   return apiRequest(`/location?id=eq.${id}`, 'PATCH', updatedLocationData);
 }
+
+/**
+ * Adds a new scanned location to the tracking table.
+ * 
+ * @param {object} scanData - The scan data to be inserted (project_id, location_id, username).
+ * @returns {Promise<object>} - The created tracking object returned by the API.
+ */
+export async function addScannedLocation(scanData) {
+  return apiRequest('/tracking', 'POST', scanData);
+}
+
+/**
+ * Retrieves a specific location by its ID.
+ * 
+ * @param {string} locationId - The ID of the location to retrieve.
+ * @returns {Promise<object>} - The location object matching the provided ID.
+ */
+export async function getLocation(locationId) {
+  return apiRequest(`/location?id=eq.${locationId}`);
+}
+
+/**
+ * Adds tracking data for a scanned location.
+ * 
+ * @param {object} trackingData - The tracking data to add.
+ * @returns {Promise<object>} - The created tracking object returned by the API.
+ */
+export async function addTracking(trackingData) {
+  return apiRequest('/tracking', 'POST', trackingData);
+}
+
+/**
+ * Retrieves scanned locations for a specified project and user.
+ * 
+ * @param {string} projectId - The ID of the project.
+ * @returns {Promise<Array>} - An array of scanned location objects.
+ */
+export async function getScannedLocations(projectId) {
+  return apiRequest(`/tracking?project_id=eq.${projectId}&username=eq.${USERNAME}`);
+}
+
+/**
+ * Deletes scanned locations for the current user in a specified project.
+ * 
+ * @param {string} projectId - The ID of the project.
+ * @returns {Promise<null>} - Returns null upon successful deletion.
+ */
+export async function deleteScannedLocations(projectId) {
+  return apiRequest(`/tracking?project_id=eq.${projectId}&username=eq.${USERNAME}`, 'DELETE');
+}

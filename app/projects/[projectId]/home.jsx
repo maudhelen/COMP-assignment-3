@@ -1,36 +1,64 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState, useContext } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { globalStyles } from '../../styles';
 import { useLocalSearchParams } from 'expo-router';
-import { getProject } from '../../services/api';  // Assume this function fetches a project by ID
+import { getProject } from '../../services/api';
+import { LocationContext } from '../../context/LocationContext';
+import { Feather } from '@expo/vector-icons';
 
 export default function ProjectHome() {
-  // Retrieve projectId from URL params
   const { projectId } = useLocalSearchParams();
-  console.log("projectId", projectId);  
+  const { 
+    locations, 
+    scannedLocations, 
+    loading, 
+    refreshLocations, 
+    postNewScan 
+  } = useContext(LocationContext);
   const [project, setProject] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  // Fetch project data when the component mounts
+  // Fetch project data and refresh context when component mounts
   useEffect(() => {
-    const fetchProjectData = async () => {
+    const fetchData = async () => {
       try {
         const fetchedProject = await getProject(projectId);
-        console.log("fetchedProject", fetchedProject);  
         setProject(fetchedProject[0]);
+        await refreshLocations(projectId);  // Ensure context refresh on load
       } catch (error) {
-        console.error('Error fetching project:', error);
-      } finally {
-        setLoading(false);
+        console.error('Error fetching project data:', error);
       }
     };
 
     if (projectId) {
-      fetchProjectData();
+      fetchData();
     }
   }, [projectId]);
 
-  // Show loading indicator while fetching project data
+  // Calculate total possible points
+  const totalPoints = locations.reduce((sum, loc) => sum + loc.score_points, 0);
+
+  // Calculate scored points from scanned locations
+  const scoredPoints = scannedLocations.reduce((sum, scannedLoc) => {
+    const location = locations.find(loc => loc.id === scannedLoc.location_id);
+    return location ? sum + location.score_points : sum;
+  }, 0);
+
+  // Calculate total and visited locations
+  const totalLocations = locations.length;
+  const visitedLocationsCount = scannedLocations.length;
+
+  // Handle scanning a new location from the home screen
+  const handleScanLocation = async (locationId) => {
+    try {
+      await postNewScan(locationId, projectId);
+      Alert.alert('Success', 'Location scanned successfully!');
+    } catch (error) {
+      console.error('Error scanning location:', error);
+      Alert.alert('Error', 'Could not scan location.');
+    }
+  };
+
+  // Show loading indicator while fetching data
   if (loading) {
     return (
       <SafeAreaView style={globalStyles.container}>
@@ -50,9 +78,17 @@ export default function ProjectHome() {
 
   return (
     <SafeAreaView style={globalStyles.container}>
+      {/* Reload Button */}
+      <TouchableOpacity 
+        style={styles.reloadButton}
+        onPress={() => refreshLocations(projectId)}  // Refresh locations on button press
+      >
+        <Feather name="refresh-cw" size={24} color="#fff" />
+      </TouchableOpacity>
+
       {/* Project Banner */}
       <View style={styles.banner}>
-        <Text style={styles.bannerText}>{project.title ? project.title : 'Project'}</Text>
+        <Text style={styles.bannerText}>{project.title || 'Project'}</Text>
       </View>
 
       {/* Instruction Box */}
@@ -83,10 +119,12 @@ export default function ProjectHome() {
         {/* Bottom Boxes */}
         <View style={styles.bottomContainer}>
           <View style={styles.bottomBox}>
-            <Text style={styles.bottomBoxText}>Points 0 / 10</Text>
+            <Text style={styles.bottomBoxText}>Points</Text>
+            <Text style={styles.bottomBoxText}>{scoredPoints} / {totalPoints}</Text>
           </View>
           <View style={styles.bottomBox}>
-            <Text style={styles.bottomBoxText}>Locations visited 0 / 3</Text>
+            <Text style={styles.bottomBoxText}>Locations visited</Text>
+            <Text style={styles.bottomBoxText}>{visitedLocationsCount} / {totalLocations}</Text>
           </View>
         </View>
       </View>
@@ -137,10 +175,11 @@ const styles = StyleSheet.create({
   bottomBox: {
     flex: 1,
     marginHorizontal: 5,
-    paddingVertical: 10,
+    paddingVertical: 15,
     backgroundColor: '#ff69b4',
     alignItems: 'center',
     borderRadius: 10,
+    justifyContent: 'center',
   },
   bottomBoxText: {
     fontSize: 16,
@@ -152,5 +191,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     marginTop: 20,
+  },
+  reloadButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    padding: 10,
+    backgroundColor: '#ff69b4',
+    borderRadius: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  reloadButtonText: {
+    color: '#fff',
+    marginLeft: 5,
+    fontWeight: 'bold',
   },
 });

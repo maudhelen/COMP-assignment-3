@@ -5,7 +5,11 @@ import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
 import { Feather } from "@expo/vector-icons";
 import { usePathname, router } from "expo-router";
 import { globalStyles } from './styles';
-import { DataProvider, DataContext } from './context/DataContext';  // Import DataContext
+import { DataProvider, DataContext } from './context/DataContext'; 
+import { ProjectProvider } from './context/ProjectContext';  
+import { LocationProvider } from './context/LocationContext';  
+
+
 
 const CustomDrawerContent = (props) => {
   const pathname = usePathname();
@@ -147,27 +151,31 @@ const styles = StyleSheet.create({
 export default function Layout() {
   return (
     <DataProvider>
-    <Drawer
-      drawerContent={(props) => <CustomDrawerContent {...props} />}
-      screenOptions={{ headerShown: false }}
-    >
-      <Drawer.Screen
-        name="index"
-        options={{ headerShown: true, headerTitle: "Welcome" }}
-      />
-      <Drawer.Screen
-        name="projects/index"
-        options={{ headerShown: true, headerTitle: "Projects" }}
-      />
-      <Drawer.Screen
-        name="profile"
-        options={{ headerShown: true, headerTitle: "Profile" }}
-      />
-      <Drawer.Screen
-        name="about"
-        options={{ headerShown: true, headerTitle: "About" }}
-      />
-    </Drawer>
+      <ProjectProvider>
+      <LocationProvider>
+        <Drawer
+          drawerContent={(props) => <CustomDrawerContent {...props} />}
+          screenOptions={{ headerShown: false }}
+        >
+          <Drawer.Screen
+            name="index"
+            options={{ headerShown: true, headerTitle: "Welcome" }}
+          />
+          <Drawer.Screen
+            name="projects/index"
+            options={{ headerShown: true, headerTitle: "Projects" }}
+          />
+          <Drawer.Screen
+            name="profile"
+            options={{ headerShown: true, headerTitle: "Profile" }}
+          />
+          <Drawer.Screen
+            name="about"
+            options={{ headerShown: true, headerTitle: "About" }}
+          />
+        </Drawer>
+        </LocationProvider>
+      </ProjectProvider>
     </DataProvider>
   );
 }
