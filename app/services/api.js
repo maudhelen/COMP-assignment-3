@@ -202,3 +202,25 @@ export async function getScannedLocations(projectId, user) {
 export async function deleteScannedLocations(projectId, participantUsername) {
   return apiRequest(`/tracking?project_id=eq.${projectId}&username=eq.${USERNAME}`, 'DELETE');
 }
+
+/**
+ * Retrieves the count of unique participants for a specific project.
+ *
+ * @param {string} projectId - The ID of the project to get participant count for.
+ * @returns {Promise<number>} - The count of unique participant usernames.
+ */
+export async function getUniqueParticipantCount(projectId) {
+  try {
+    const trackingData = await apiRequest(`/tracking?project_id=eq.${projectId}`);
+    console.log("Tracking Data:", trackingData); 
+    
+    // Use a Set to ensure only unique participant usernames are counted
+    const uniqueParticipants = new Set(trackingData.map(entry => entry.participant_username));
+    console.log("Unique Participants:", uniqueParticipants);
+    
+    return uniqueParticipants.size;  // Returns the number of unique participants
+  } catch (error) {
+    console.error('Error fetching unique participant count:', error);
+    throw error;
+  }
+}

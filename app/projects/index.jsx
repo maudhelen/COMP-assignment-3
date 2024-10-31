@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useState, useContext, useCallback } from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { globalStyles } from '../styles';
-import { getProjects } from '../services/api';
+import { getProjects, getUniqueParticipantCount } from '../services/api';
 import { ProjectContext } from '../context/ProjectContext';
-import { LocationContext } from '../context/LocationContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function ProjectsList() {
   const [projects, setProjects] = useState([]);
@@ -12,31 +12,35 @@ export default function ProjectsList() {
   const [error, setError] = useState(null);
   const router = useRouter();
   const { setProjectId } = useContext(ProjectContext);
-  const { locationParticipants, totalUniqueParticipants, fetchParticipantsData } = useContext(LocationContext);
 
-  // Log the dictionary of locations and each user in them
-  useEffect(() => {
-    console.log("Location Participants Dictionary:", locationParticipants);
-    console.log("Total Unique Participants:", totalUniqueParticipants);
-  }, [locationParticipants, totalUniqueParticipants]);
+  const fetchProjectsWithParticipants = async () => {
+    try {
+      const data = await getProjects();
+      const publishedProjects = data.filter(project => project.is_published);
 
-  // Fetch projects when the component mounts
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const data = await getProjects();
-        const publishedProjects = data.filter(project => project.is_published);
-        setProjects(publishedProjects);
-      } catch (error) {
-        console.error('Error fetching projects:', error);
-        setError('Failed to fetch projects');
-      } finally {
-        setLoading(false);
-      }
-    };
+      // Add participant count to each project
+      const projectsWithParticipants = await Promise.all(
+        publishedProjects.map(async (project) => {
+          const participantCount = await getUniqueParticipantCount(project.id);
+          return { ...project, participantCount };
+        })
+      );
 
-    fetchProjects();
-  }, []);
+      setProjects(projectsWithParticipants);
+    } catch (error) {
+      console.error('Error fetching projects with participants:', error);
+      setError('Failed to fetch projects');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true); // Start loading each time the tab is focused
+      fetchProjectsWithParticipants();
+    }, [])
+  );
 
   // Show loading indicator while fetching projects
   if (loading) {
@@ -65,7 +69,7 @@ export default function ProjectsList() {
             key={project.id}
             style={styles.projectButton}
             onPress={() => {
-              setProjectId(project.id);  // Update projectId in context
+              setProjectId(project.id);
               const serializedProject = encodeURIComponent(JSON.stringify(project));
               router.push(`/projects/${project.id}/home?projectData=${serializedProject}`);
             }}
@@ -73,7 +77,7 @@ export default function ProjectsList() {
             <Text style={styles.projectName}>{project.title}</Text>
             <View style={styles.participantsPill}>
               <Text style={styles.participantsText}>
-                Participants: {project.participants || totalUniqueParticipants || 0}
+                Participants: {project.participantCount || 0}
               </Text>
             </View>
           </TouchableOpacity>
