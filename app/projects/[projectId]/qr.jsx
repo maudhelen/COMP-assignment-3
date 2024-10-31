@@ -6,6 +6,34 @@ import { addTracking } from '../../services/api';
 import LocationPopup from '../../components/LocationPopup';
 import { DataContext } from '../../context/DataContext';
 
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+  },
+  message: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  scanResultContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    padding: 15,
+  },
+  scanResultText: {
+    fontSize: 16,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+});
+
 export default function QRScanner() {
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
@@ -83,30 +111,3 @@ export default function QRScanner() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-  },
-  message: {
-    fontSize: 16,
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  scanResultContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#fff',
-    padding: 15,
-  },
-  scanResultText: {
-    fontSize: 16,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-});

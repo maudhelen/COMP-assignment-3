@@ -46,18 +46,7 @@ export default function ProjectHome() {
   // Calculate total and visited locations
   const totalLocations = locations.length;
   const visitedLocationsCount = scannedLocations.length;
-
-  // Handle scanning a new location from the home screen
-  const handleScanLocation = async (locationId) => {
-    try {
-      await postNewScan(locationId, projectId);
-      Alert.alert('Success', 'Location scanned successfully!');
-    } catch (error) {
-      console.error('Error scanning location:', error);
-      Alert.alert('Error', 'Could not scan location.');
-    }
-  };
-
+  
   // Show loading indicator while fetching data
   if (loading) {
     return (
