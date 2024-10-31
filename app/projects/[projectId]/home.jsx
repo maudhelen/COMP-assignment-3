@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { globalStyles } from '../../styles';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
 import { getProject } from '../../services/api';
 import { LocationContext } from '../../context/LocationContext';
 import { Feather } from '@expo/vector-icons';
+import React, { useEffect, useState, useContext } from 'react';
 
 export default function ProjectHome() {
   const { projectId } = useLocalSearchParams();
@@ -17,7 +17,6 @@ export default function ProjectHome() {
   } = useContext(LocationContext);
   const [project, setProject] = useState(null);
 
-  // Fetch project data and refresh context when component mounts
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -34,20 +33,15 @@ export default function ProjectHome() {
     }
   }, [projectId]);
 
-  // Calculate total possible points
   const totalPoints = locations.reduce((sum, loc) => sum + loc.score_points, 0);
-
-  // Calculate scored points from scanned locations
   const scoredPoints = scannedLocations.reduce((sum, scannedLoc) => {
     const location = locations.find(loc => loc.id === scannedLoc.location_id);
     return location ? sum + location.score_points : sum;
   }, 0);
 
-  // Calculate total and visited locations
   const totalLocations = locations.length;
   const visitedLocationsCount = scannedLocations.length;
   
-  // Show loading indicator while fetching data
   if (loading) {
     return (
       <SafeAreaView style={globalStyles.container}>
@@ -56,7 +50,6 @@ export default function ProjectHome() {
     );
   }
 
-  // If no project data is found, show an error message
   if (!project) {
     return (
       <SafeAreaView style={globalStyles.container}>
@@ -67,10 +60,19 @@ export default function ProjectHome() {
 
   return (
     <SafeAreaView style={globalStyles.container}>
+      {/* Back Button */}
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => router.push('/projects')}
+      >
+        <Feather name="arrow-left" size={24} color="grey" />
+        <Text style={styles.backButtonText}>Back to Projects</Text>
+      </TouchableOpacity>
+
       {/* Reload Button */}
       <TouchableOpacity 
         style={styles.reloadButton}
-        onPress={() => refreshLocations(projectId)}  // Refresh locations on button press
+        onPress={() => refreshLocations(projectId)}
       >
         <Feather name="refresh-cw" size={24} color="#fff" />
       </TouchableOpacity>
@@ -87,25 +89,21 @@ export default function ProjectHome() {
           {project.instructions || 'No instructions provided.'}
         </Text>
 
-        {/* Initial Clue */}
         <Text style={styles.instructionTitle}>Initial Clue</Text>
         <Text style={styles.instructionContent}>
           {project.initial_clue || 'No initial clue available.'}
         </Text>
 
-        {/* Description */}
         <Text style={styles.instructionTitle}>Description</Text>
         <Text style={styles.instructionContent}>
           {project.description || 'No description available.'}
         </Text>
 
-        {/* Scoring */}
         <Text style={styles.instructionTitle}>Scoring</Text>
         <Text style={styles.instructionContent}>
           {project.participant_scoring || 'No scoring information available.'}
         </Text>
 
-        {/* Bottom Boxes */}
         <View style={styles.bottomContainer}>
           <View style={styles.bottomBox}>
             <Text style={styles.bottomBoxText}>Points</Text>
@@ -122,6 +120,22 @@ export default function ProjectHome() {
 }
 
 const styles = StyleSheet.create({
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    padding: 10,
+    backgroundColor: '#e0e0e0',  // Light grey background
+    borderRadius: 5,
+  },
+  backButtonText: {
+    color: 'grey',
+    fontSize: 16,
+    marginLeft: 5,
+    fontWeight: 'bold',
+  },
   banner: {
     width: '100%',
     paddingVertical: 15,
@@ -183,7 +197,7 @@ const styles = StyleSheet.create({
   },
   reloadButton: {
     position: 'absolute',
-    top: 10,
+    top: 60,
     left: 10,
     padding: 10,
     backgroundColor: '#ff69b4',

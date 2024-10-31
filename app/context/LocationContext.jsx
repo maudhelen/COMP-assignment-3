@@ -19,7 +19,7 @@ export const LocationProvider = ({ children }) => {
     try {
       const fetchedLocations = await getLocations(projectId);
       setLocations(fetchedLocations);
-      console.log("Fetched Locations:", fetchedLocations);  // Check locations data
+      // console.log("Fetched Locations:", fetchedLocations);  // Check locations data
     } catch (error) {
       console.error('Error fetching locations:', error);
     } finally {
@@ -33,7 +33,7 @@ export const LocationProvider = ({ children }) => {
     try {
       const fetchedScannedLocations = await getScannedLocations(projectId, user);
       setScannedLocations(fetchedScannedLocations);
-      console.log("Fetched Scanned Locations:", fetchedScannedLocations); // Check scanned locations
+      // console.log("Fetched Scanned Locations:", fetchedScannedLocations); // Check scanned locations
     } catch (error) {
       console.error('Error fetching scanned locations:', error);
     } finally {
