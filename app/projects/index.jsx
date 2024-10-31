@@ -3,24 +3,30 @@ import { View, Text, TouchableOpacity, SafeAreaView, StyleSheet, ActivityIndicat
 import { useRouter } from 'expo-router';
 import { globalStyles } from '../styles';
 import { getProjects } from '../services/api';
-import { ProjectContext } from '../context/ProjectContext';  // Import ProjectContext
-
+import { ProjectContext } from '../context/ProjectContext';
+import { LocationContext } from '../context/LocationContext';
 
 export default function ProjectsList() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const router = useRouter();
-  const { setProjectId } = useContext(ProjectContext);  // Access setProjectId from context
+  const { setProjectId } = useContext(ProjectContext);
+  const { locationParticipants, totalUniqueParticipants, fetchParticipantsData } = useContext(LocationContext);
 
+  // Log the dictionary of locations and each user in them
+  useEffect(() => {
+    console.log("Location Participants Dictionary:", locationParticipants);
+    console.log("Total Unique Participants:", totalUniqueParticipants);
+  }, [locationParticipants, totalUniqueParticipants]);
 
   // Fetch projects when the component mounts
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const data = await getProjects();  // Fetch projects from the API
-        const publishedProjects = data.filter(project => project.is_published);  // Filter only published projects
-        setProjects(publishedProjects);  // Set projects state
+        const data = await getProjects();
+        const publishedProjects = data.filter(project => project.is_published);
+        setProjects(publishedProjects);
       } catch (error) {
         console.error('Error fetching projects:', error);
         setError('Failed to fetch projects');
@@ -67,14 +73,9 @@ export default function ProjectsList() {
             <Text style={styles.projectName}>{project.title}</Text>
             <View style={styles.participantsPill}>
               <Text style={styles.participantsText}>
-                id: {project.id || 0}
+                Participants: {project.participants || totalUniqueParticipants || 0}
               </Text>
             </View>
-            {/* <View style={styles.participantsPill}>
-              <Text style={styles.participantsText}>
-                Participants: {project.participants || 0}
-              </Text>
-            </View> */}
           </TouchableOpacity>
         ))}
       </View>
