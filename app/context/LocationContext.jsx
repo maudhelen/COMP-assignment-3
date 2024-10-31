@@ -1,5 +1,6 @@
-import React, { createContext, useState, useEffect } from 'react';
-import { getLocations, getScannedLocations } from '../services/api';
+import React, { createContext, useState, useContext } from 'react';
+import { getLocations, getScannedLocations, addTracking } from '../services/api';
+import { DataContext } from './DataContext'
 
 // Create LocationContext
 export const LocationContext = createContext();
@@ -8,14 +9,17 @@ export const LocationProvider = ({ children }) => {
   const [locations, setLocations] = useState([]);          // All project locations
   const [scannedLocations, setScannedLocations] = useState([]);  // User's scanned locations
   const [loading, setLoading] = useState(false);
-  const [projectId, setProjectId] = useState(null);        // Track current project ID
+  const [projectId, setProjectId] = useState(null);
+  const { user } = useContext(DataContext);
 
+  
   // Fetch all locations for a specific project
   const fetchLocations = async (projectId) => {
     setLoading(true);
     try {
       const fetchedLocations = await getLocations(projectId);
       setLocations(fetchedLocations);
+      console.log("Fetched Locations:", fetchedLocations);  // Check locations data
     } catch (error) {
       console.error('Error fetching locations:', error);
     } finally {
@@ -27,8 +31,9 @@ export const LocationProvider = ({ children }) => {
   const fetchScannedLocations = async (projectId) => {
     setLoading(true);
     try {
-      const fetchedScannedLocations = await getScannedLocations(projectId);
+      const fetchedScannedLocations = await getScannedLocations(projectId, user);
       setScannedLocations(fetchedScannedLocations);
+      console.log("Fetched Scanned Locations:", fetchedScannedLocations); // Check scanned locations
     } catch (error) {
       console.error('Error fetching scanned locations:', error);
     } finally {
@@ -63,10 +68,13 @@ const postNewScan = async (locationId, projectId) => {
       // Check if the location has already been scanned
       if (!scannedLocations.some(loc => loc.location_id === locationId)) {
         // Post the new scan to the tracking endpoint
-        await addTracking({ project_id: projectId, location_id: locationId, username: user });
+        await addTracking({ project_id: projectId, location_id: locationId, participant_username: user });
   
         // Update state and refresh context
         setScannedLocations(prev => [...prev, { location_id: locationId }]);
+
+        console.log('New scan added:', { location_id: locationId });
+        console.log('Scanned locations:', scannedLocations);
         await refreshLocations(projectId);
       }
     } catch (error) {

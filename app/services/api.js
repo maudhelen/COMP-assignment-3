@@ -189,8 +189,8 @@ export async function addTracking(trackingData) {
  * @param {string} projectId - The ID of the project.
  * @returns {Promise<Array>} - An array of scanned location objects.
  */
-export async function getScannedLocations(projectId) {
-  return apiRequest(`/tracking?project_id=eq.${projectId}&username=eq.${USERNAME}`);
+export async function getScannedLocations(projectId, user) {
+  return apiRequest(`/tracking?project_id=eq.${projectId}&username=eq.${USERNAME}&participant_username=eq.${user}`);
 }
 
 /**
@@ -199,6 +199,6 @@ export async function getScannedLocations(projectId) {
  * @param {string} projectId - The ID of the project.
  * @returns {Promise<null>} - Returns null upon successful deletion.
  */
-export async function deleteScannedLocations(projectId) {
+export async function deleteScannedLocations(projectId, participantUsername) {
   return apiRequest(`/tracking?project_id=eq.${projectId}&username=eq.${USERNAME}`, 'DELETE');
 }

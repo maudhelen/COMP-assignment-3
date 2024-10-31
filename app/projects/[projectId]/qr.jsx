@@ -2,10 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { View, Text, Button, StyleSheet, SafeAreaView, Alert } from 'react-native';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import { LocationContext } from '../../context/LocationContext';
-import { addTracking } from '../../services/api';
 import LocationPopup from '../../components/LocationPopup';
-import { DataContext } from '../../context/DataContext';
-
 
 const styles = StyleSheet.create({
   container: {
@@ -39,8 +36,7 @@ export default function QRScanner() {
   const [scanned, setScanned] = useState(false);
   const [scannedLocation, setScannedLocation] = useState(null);
   const [popupVisible, setPopupVisible] = useState(false);
-  const { user } = useContext(DataContext);
-  const { locations, scannedLocations, refreshLocations } = useContext(LocationContext); 
+  const { locations, scannedLocations, refreshLocations, postNewScan } = useContext(LocationContext);
 
   // Request camera permission
   useEffect(() => {
@@ -60,11 +56,9 @@ export default function QRScanner() {
     }
 
     try {
-      await addTracking({ project_id: projectId, location_id: locationId, username: user });
-
-      // Call the context refresh function to update state globally
+      // Use postNewScan from LocationContext
+      await postNewScan(locationId, projectId);
       await refreshLocations(projectId);
-
       Alert.alert('Success', 'Location scanned successfully!');
     } catch (error) {
       console.error('Error adding tracking:', error);
@@ -72,7 +66,6 @@ export default function QRScanner() {
     }
   };
 
-  // Handle scanned QR code logic remains the same
   const handleBarCodeScanned = ({ type, data }) => {
     setScanned(true);
     const [projectId, locationId] = data.split('-').map(Number);

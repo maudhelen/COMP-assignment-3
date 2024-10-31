@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, SafeAreaView, View, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { StyleSheet, Text, SafeAreaView, Appearance, View, TouchableOpacity } from 'react-native';
 import MapView, { Circle, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useLocalSearchParams } from 'expo-router';
-import { getLocations, getScannedLocations } from '../../services/api';
+import { LocationContext } from '../../context/LocationContext';
+import LocationPopup from '../../components/LocationPopup';  
 import { Feather } from '@expo/vector-icons';
-import LocationPopup from '../../components/LocationPopup'; 
 import { deleteScannedLocations } from '../../services/api';
 
 const styles = StyleSheet.create({
@@ -33,76 +33,41 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     elevation: 5,
   },
+  deleteButton: {
+    position: 'absolute',
+    top: 60,
+    left: 10,
+    width: 40,
+    height: 40,
+    backgroundColor: '#ff69b4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 5,
+    elevation: 5,
+  },
 });
+
+const colorScheme = Appearance.getColorScheme();
+const circleColor = colorScheme === 'dark' 
+  ? 'rgba(255, 105, 180, 0.5)'  
+  : 'rgba(255, 105, 180, 0.5)';
 
 export default function ShowMap() {
   const { projectId } = useLocalSearchParams();
-
-  const [mapState, setMapState] = useState({
-    locationPermission: false,
-    locations: [],
-    scannedLocationIds: [],
-    userLocation: null,
-    loading: true,
-  });
+  const { locations, scannedLocations, loading, refreshLocations } = useContext(LocationContext); 
   const [initialRegion, setInitialRegion] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
   const [popupVisible, setPopupVisible] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
 
-  // Fetch all locations for the project
-  const fetchProjectLocations = async () => {
-    if (!projectId) return;
-
-    try {
-      const fetchedLocations = await getLocations(projectId);
-      const updatedLocations = fetchedLocations.map(location => {
-        const [longitude, latitude] = location.location_position
-          .replace(/[()]/g, '')
-          .split(',')
-          .map(coord => parseFloat(coord));
-
-        return {
-          ...location,
-          coordinates: { latitude, longitude },
-        };
-      });
-
-      setMapState(prevState => ({
-        ...prevState,
-        locations: updatedLocations,
-      }));
-    } catch (error) {
-      console.error('Error fetching locations:', error);
-    }
-  };
-
-  // Fetch scanned locations for the user
-  const fetchScannedLocations = async () => {
-    if (!projectId) return;
-
-    try {
-      const scannedLocations = await getScannedLocations(projectId);
-      const scannedLocationIds = scannedLocations.map(loc => loc.location_id);
-
-      setMapState(prevState => ({
-        ...prevState,
-        scannedLocationIds,
-        loading: false,
-      }));
-    } catch (error) {
-      console.error('Error fetching scanned locations:', error);
-      setMapState(prevState => ({
-        ...prevState,
-        loading: false,
-      }));
-    }
-  };
-
+  // Refresh locations when projectId changes
   useEffect(() => {
-    fetchProjectLocations();
-    fetchScannedLocations();
+    if (projectId) {
+      refreshLocations(projectId);
+    }
   }, [projectId]);
 
+  // Request location permission and set initial region
   useEffect(() => {
     async function requestLocationPermission() {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -112,13 +77,7 @@ export default function ShowMap() {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         };
-
-        setMapState(prevState => ({
-          ...prevState,
-          locationPermission: true,
-          userLocation,
-        }));
-
+        setUserLocation(userLocation);
         setInitialRegion({
           latitude: userLocation.latitude,
           longitude: userLocation.longitude,
@@ -127,16 +86,29 @@ export default function ShowMap() {
         });
       }
     }
-
     requestLocationPermission();
   }, []);
 
   const handleLocationPress = (location) => {
-    setSelectedLocation(location); // Set selected location for popup
-    setPopupVisible(true);         // Show the popup
+    setSelectedLocation(location);  
+    setPopupVisible(true);  
   };
 
-  if (mapState.loading || !initialRegion) {
+  // Parse and filter scanned locations
+  const scannedLocationDetails = locations
+    .filter(loc => scannedLocations.some(scanned => scanned.location_id === loc.id))
+    .map(location => {
+      const [longitude, latitude] = location.location_position
+        .replace(/[()]/g, '')
+        .split(',')
+        .map(coord => parseFloat(coord));
+      return {
+        ...location,
+        coordinates: { latitude, longitude }
+      };
+    });
+
+  if (loading || !initialRegion) {
     return (
       <SafeAreaView style={styles.container}>
         <Text style={styles.loadingText}>Loading locations...</Text>
@@ -144,33 +116,47 @@ export default function ShowMap() {
     );
   }
 
-  // Filter locations to only include scanned ones
-  const scannedLocations = mapState.locations.filter(location =>
-    mapState.scannedLocationIds.includes(location.id)
-  );
-
   return (
-    <SafeAreaView style={styles.container}>
+    <>
       <MapView
         initialRegion={initialRegion}
-        showsUserLocation={mapState.locationPermission}
-        style={StyleSheet.absoluteFillObject}
+        showsUserLocation={!!userLocation}
+        style={styles.container}
       >
-        {scannedLocations.map(location => (
-          <TouchableOpacity>
+        {scannedLocationDetails.map(location => (
+          <React.Fragment key={location.id}>
             <Circle
               center={location.coordinates}
               radius={100}
-              fillColor="rgba(255, 105, 180, 0.5)"
+              fillColor={circleColor}
               strokeColor="#ff69b4"
             />
             <Marker
               coordinate={location.coordinates}
               onPress={() => handleLocationPress(location)}
             />
-          </TouchableOpacity>
+          </React.Fragment>
         ))}
       </MapView>
+
+      {/* Refresh Button */}
+      <TouchableOpacity
+        style={styles.refreshButton}
+        onPress={() => refreshLocations(projectId)}
+      >
+        <Feather name="refresh-cw" size={24} color="#fff" />
+      </TouchableOpacity>
+
+      {/* Delete All Locations Button */}
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={() => {
+          deleteScannedLocations(projectId);
+          refreshLocations(projectId);  // Refresh context after deletion
+        }}
+      >
+        <Feather name="trash" size={24} color="#fff" />
+      </TouchableOpacity>
 
       {/* Location Popup */}
       <LocationPopup
@@ -178,26 +164,6 @@ export default function ShowMap() {
         location={selectedLocation}
         onClose={() => setPopupVisible(false)}
       />
-
-      {/* Refresh Button */}
-      <TouchableOpacity
-        style={styles.refreshButton}
-        onPress={() => {
-          fetchProjectLocations();
-          fetchScannedLocations();
-        }}
-      >
-        <Feather name="refresh-cw" size={24} color="#fff" />
-      </TouchableOpacity>
-
-      {/* Delete All Locations Button */}
-      <TouchableOpacity
-        style={{ ...styles.refreshButton, top: 60 }}
-        onPress={() => deleteScannedLocations(projectId)}
-        
-      >
-        <Feather name="trash" size={24} color="#fff" />
-      </TouchableOpacity>
-    </SafeAreaView>
+    </>
   );
 }
