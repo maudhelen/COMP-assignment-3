@@ -7,6 +7,7 @@ import { LocationContext } from '../../context/LocationContext';
 import LocationPopup from '../../components/LocationPopup';  
 import { Feather } from '@expo/vector-icons';
 import { deleteScannedLocations } from '../../services/api';
+import { ProjectContext } from '../../context/ProjectContext';
 
 const styles = StyleSheet.create({
   container: {
@@ -53,7 +54,7 @@ const circleColor = colorScheme === 'dark'
   : 'rgba(255, 105, 180, 0.5)';
 
 export default function ShowMap() {
-  const { projectId } = useLocalSearchParams();
+  const { projectId } = ProjectContext
   const { locations, scannedLocations, loading, refreshLocations } = useContext(LocationContext); 
   const [initialRegion, setInitialRegion] = useState(null);
   const [userLocation, setUserLocation] = useState(null);

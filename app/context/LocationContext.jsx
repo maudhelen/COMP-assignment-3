@@ -48,12 +48,12 @@ export const LocationProvider = ({ children }) => {
   };
 
   // Refresh all locations and scanned locations for the current project
-  const refreshLocations = async (newProjectId = projectId) => {
-    if (newProjectId) {
+  const refreshLocations = async (projectId) => {
+    if (projectId) {
       setLoading(true);
       try {
-        await fetchLocations(newProjectId);
-        await fetchScannedLocations(newProjectId);
+        await fetchLocations(projectId);
+        await fetchScannedLocations(projectId);
       } catch (error) {
         console.error('Error refreshing locations:', error);
       } finally {
