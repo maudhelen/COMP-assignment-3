@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, SafeAreaView, View, TouchableOpacity } from 'react-native';
-import MapView, { Circle } from 'react-native-maps';
+import MapView, { Circle, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { getDistance } from 'geolib';
 import { useLocalSearchParams } from 'expo-router';
-import { getLocations, getScannedLocations } from '../../services/api'; // Include getScannedLocations
+import { getLocations, getScannedLocations } from '../../services/api';
 import { Feather } from '@expo/vector-icons';
+import LocationPopup from '../../components/LocationPopup'; 
+import { deleteScannedLocations } from '../../services/api';
 
 const styles = StyleSheet.create({
   container: {
@@ -45,6 +46,8 @@ export default function ShowMap() {
     loading: true,
   });
   const [initialRegion, setInitialRegion] = useState(null);
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
 
   // Fetch all locations for the project
   const fetchProjectLocations = async () => {
@@ -128,6 +131,11 @@ export default function ShowMap() {
     requestLocationPermission();
   }, []);
 
+  const handleLocationPress = (location) => {
+    setSelectedLocation(location); // Set selected location for popup
+    setPopupVisible(true);         // Show the popup
+  };
+
   if (mapState.loading || !initialRegion) {
     return (
       <SafeAreaView style={styles.container}>
@@ -149,15 +157,27 @@ export default function ShowMap() {
         style={StyleSheet.absoluteFillObject}
       >
         {scannedLocations.map(location => (
-          <Circle
-            key={location.id}
-            center={location.coordinates}
-            radius={100}
-            fillColor="rgba(255, 105, 180, 0.5)"
-            strokeColor="#ff69b4"
-          />
+          <TouchableOpacity>
+            <Circle
+              center={location.coordinates}
+              radius={100}
+              fillColor="rgba(255, 105, 180, 0.5)"
+              strokeColor="#ff69b4"
+            />
+            <Marker
+              coordinate={location.coordinates}
+              onPress={() => handleLocationPress(location)}
+            />
+          </TouchableOpacity>
         ))}
       </MapView>
+
+      {/* Location Popup */}
+      <LocationPopup
+        visible={popupVisible}
+        location={selectedLocation}
+        onClose={() => setPopupVisible(false)}
+      />
 
       {/* Refresh Button */}
       <TouchableOpacity
@@ -168,6 +188,15 @@ export default function ShowMap() {
         }}
       >
         <Feather name="refresh-cw" size={24} color="#fff" />
+      </TouchableOpacity>
+
+      {/* Delete All Locations Button */}
+      <TouchableOpacity
+        style={{ ...styles.refreshButton, top: 60 }}
+        onPress={() => deleteScannedLocations(projectId)}
+        
+      >
+        <Feather name="trash" size={24} color="#fff" />
       </TouchableOpacity>
     </SafeAreaView>
   );
