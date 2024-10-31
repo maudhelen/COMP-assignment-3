@@ -1,14 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { globalStyles } from '../styles';
 import { getProjects } from '../services/api';
+import { ProjectContext } from '../context/ProjectContext';  // Import ProjectContext
+
 
 export default function ProjectsList() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const router = useRouter();
+  const { setProjectId } = useContext(ProjectContext);  // Access setProjectId from context
+
 
   // Fetch projects when the component mounts
   useEffect(() => {
@@ -55,16 +59,22 @@ export default function ProjectsList() {
             key={project.id}
             style={styles.projectButton}
             onPress={() => {
+              setProjectId(project.id);  // Update projectId in context
               const serializedProject = encodeURIComponent(JSON.stringify(project));
-              router.push(`/projects/${project.id}?projectData=${serializedProject}`);
+              router.push(`/projects/${project.id}/home?projectData=${serializedProject}`);
             }}
           >
             <Text style={styles.projectName}>{project.title}</Text>
             <View style={styles.participantsPill}>
               <Text style={styles.participantsText}>
-                Participants: {project.participants || 0}
+                id: {project.id || 0}
               </Text>
             </View>
+            {/* <View style={styles.participantsPill}>
+              <Text style={styles.participantsText}>
+                Participants: {project.participants || 0}
+              </Text>
+            </View> */}
           </TouchableOpacity>
         ))}
       </View>

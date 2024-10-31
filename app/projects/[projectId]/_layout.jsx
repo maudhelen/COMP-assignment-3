@@ -5,6 +5,8 @@ import { DrawerToggleButton } from '@react-navigation/drawer';
 export default function ProjectTabsLayout() {
   const { projectId } = useLocalSearchParams(); // Get projectId from params
 
+  console.log("From ProjectTabsLayout.jsx: ", projectId);
+
   if (!projectId) {
     console.error("No projectId provided in route params");
     return null; // Ensure that projectId is available

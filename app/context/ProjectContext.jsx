@@ -1,4 +1,3 @@
-// app/context/ProjectContext.jsx
 import React, { createContext, useState, useEffect } from 'react';
 import { getProjects } from '../services/api';
 
@@ -8,6 +7,7 @@ export const ProjectContext = createContext();
 // Create the provider component
 export const ProjectProvider = ({ children }) => {
   const [projects, setProjects] = useState([]);
+  const [projectId, setProjectId] = useState(null);  // Add projectId and setProjectId
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [projectsError, setProjectsError] = useState(null);
 
@@ -33,7 +33,14 @@ export const ProjectProvider = ({ children }) => {
   }, []);
 
   return (
-    <ProjectContext.Provider value={{ projects, loadingProjects, projectsError, fetchProjects }}>
+    <ProjectContext.Provider value={{
+      projects,
+      projectId,            // Make projectId available to consumers
+      setProjectId,          // Provide setProjectId for updating projectId
+      loadingProjects,
+      projectsError,
+      fetchProjects
+    }}>
       {children}
     </ProjectContext.Provider>
   );

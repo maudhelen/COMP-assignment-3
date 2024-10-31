@@ -1,6 +1,9 @@
 import React, { createContext, useState, useContext } from 'react';
 import { getLocations, getScannedLocations, addTracking } from '../services/api';
+import { useLocalSearchParams } from 'expo-router';
 import { DataContext } from './DataContext'
+import { ProjectContext } from './ProjectContext';
+
 
 // Create LocationContext
 export const LocationContext = createContext();
@@ -9,8 +12,11 @@ export const LocationProvider = ({ children }) => {
   const [locations, setLocations] = useState([]);          // All project locations
   const [scannedLocations, setScannedLocations] = useState([]);  // User's scanned locations
   const [loading, setLoading] = useState(false);
-  const [projectId, setProjectId] = useState(null);
+
   const { user } = useContext(DataContext);
+  const { projectId } = useContext(ProjectContext); // Access projectId from ProjectContext
+
+  console.log("From LocationContext.jsx: ", projectId);
 
   
   // Fetch all locations for a specific project
@@ -48,7 +54,6 @@ export const LocationProvider = ({ children }) => {
       try {
         await fetchLocations(newProjectId);
         await fetchScannedLocations(newProjectId);
-        setProjectId(newProjectId);  // Update project ID
       } catch (error) {
         console.error('Error refreshing locations:', error);
       } finally {
@@ -75,7 +80,7 @@ const postNewScan = async (locationId, projectId) => {
 
         console.log('New scan added:', { location_id: locationId });
         console.log('Scanned locations:', scannedLocations);
-        await refreshLocations(projectId);
+        await fetchLocations(projectId);
       }
     } catch (error) {
       console.error('Error posting new scan:', error);
@@ -90,7 +95,6 @@ const postNewScan = async (locationId, projectId) => {
         loading,
         refreshLocations,
         clearScannedLocations,
-        setProjectId,
         postNewScan,  // Expose new function
       }}
     >

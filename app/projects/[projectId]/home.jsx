@@ -3,16 +3,17 @@ import { globalStyles } from '../../styles';
 import { useLocalSearchParams, router } from 'expo-router';
 import { getProject } from '../../services/api';
 import { LocationContext } from '../../context/LocationContext';
+import { ProjectContext } from '../../context/ProjectContext';
 import { Feather } from '@expo/vector-icons';
 import React, { useEffect, useState, useContext } from 'react';
 
 export default function ProjectHome() {
-  const { projectId } = useLocalSearchParams();
+  const { projectId } = useContext(ProjectContext);
   const { 
     locations, 
     scannedLocations, 
     loading, 
-    refreshLocations, 
+    refreshLocations,
     postNewScan 
   } = useContext(LocationContext);
   const [project, setProject] = useState(null);
@@ -22,7 +23,7 @@ export default function ProjectHome() {
       try {
         const fetchedProject = await getProject(projectId);
         setProject(fetchedProject[0]);
-        await refreshLocations(projectId);  // Ensure context refresh on load
+        await refreshLocations(projectId);
       } catch (error) {
         console.error('Error fetching project data:', error);
       }
@@ -53,6 +54,22 @@ export default function ProjectHome() {
   if (!project) {
     return (
       <SafeAreaView style={globalStyles.container}>
+              {/* Back Button */}
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => router.push('/projects')}
+      >
+        <Feather name="arrow-left" size={24} color="grey" />
+        <Text style={styles.backButtonText}>Back to Projects</Text>
+      </TouchableOpacity>
+
+      {/* Reload Button */}
+      <TouchableOpacity 
+        style={styles.reloadButton}
+        onPress={() => refreshLocations(projectId)}
+      >
+        <Feather name="refresh-cw" size={24} color="#fff" />
+      </TouchableOpacity>
         <Text style={styles.errorText}>Project not found</Text>
       </SafeAreaView>
     );
