@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import { getLocations, getScannedLocations, addTracking } from '../services/api';
 import { DataContext } from './DataContext';
 import { ProjectContext } from './ProjectContext';
@@ -25,6 +25,12 @@ export const LocationProvider = ({ children }) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user && projectId) {
+      fetchScannedLocations();
+    }
+  }, [user]);  // Runs every time `user` changes
 
   // Fetch scanned locations for the user in a specific project
   const fetchScannedLocations = async (projectId) => {
