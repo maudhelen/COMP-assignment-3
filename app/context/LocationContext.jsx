@@ -59,6 +59,12 @@ export const LocationProvider = ({ children }) => {
     }
   };
 
+  /**
+   * This function posts a new scan for the user in a specific project, if the location hasn't been scanned already for that user and project.
+   * @param {int} locationId 
+   * @param {int} projectId 
+   * @returns boolean based on wheter it could post the new scan or not
+   */
   const postNewScan = async (locationId, projectId) => {
     try {
       // Fetch the latest scanned locations and use the response directly

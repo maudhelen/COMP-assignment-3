@@ -230,13 +230,20 @@ export async function getUniqueParticipantCount(projectId) {
   }
 }
 
-// In services/api.js
+
+/**
+ * Retrieves the count of unique participants for a specific project and location.
+ * Based on number of unique participant usernames in the tracking data.
+ *
+ * @param {string} projectId - The ID of the project to get participant count for.
+ * @returns {Promise<number>} - The count of unique participant usernames.
+ */
 export async function getUniqueParticipantCountForLocation(locationId, projectId) {
   try {
     const trackingData = await apiRequest(`/tracking?location_id=eq.${locationId}&project_id=eq.${projectId}`);
     console.log("Tracking Data for locaiton:", trackingData);
     const uniqueParticipants = new Set(trackingData.map(entry => entry.participant_username));
-    return uniqueParticipants.size; // Returns the unique participant count
+    return uniqueParticipants.size;
   } catch (error) {
     console.error('Error fetching unique participant count for location:', error);
     throw error;

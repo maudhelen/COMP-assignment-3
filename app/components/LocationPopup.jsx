@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Modal, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { Text } from 'react-native-paper';
 import RenderHTML from 'react-native-render-html';
-import { getUniqueParticipantCountForLocation } from '../services/api';  // Define this in api.js
+import { getUniqueParticipantCountForLocation } from '../services/api';
 
 export default function LocationPopup({ visible, location, onClose }) {
   const contentWidth = Dimensions.get('window').width;

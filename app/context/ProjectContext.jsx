@@ -7,7 +7,7 @@ export const ProjectContext = createContext();
 // Create the provider component
 export const ProjectProvider = ({ children }) => {
   const [projects, setProjects] = useState([]);
-  const [projectId, setProjectId] = useState(null);  // Add projectId and setProjectId
+  const [projectId, setProjectId] = useState(null);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [projectsError, setProjectsError] = useState(null);
 
@@ -35,8 +35,8 @@ export const ProjectProvider = ({ children }) => {
   return (
     <ProjectContext.Provider value={{
       projects,
-      projectId,            // Make projectId available to consumers
-      setProjectId,          // Provide setProjectId for updating projectId
+      projectId,            
+      setProjectId,        
       loadingProjects,
       projectsError,
       fetchProjects

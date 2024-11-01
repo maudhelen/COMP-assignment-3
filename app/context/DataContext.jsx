@@ -1,5 +1,4 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { getScannedLocations, addScannedLocation } from '../services/api';
 
 export const DataContext = createContext();
 
