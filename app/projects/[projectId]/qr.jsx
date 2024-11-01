@@ -36,9 +36,8 @@ export default function QRScanner() {
   const [scanned, setScanned] = useState(false);
   const [scannedLocation, setScannedLocation] = useState(null);
   const [popupVisible, setPopupVisible] = useState(false);
-  const { locations, scannedLocations, refreshLocations, postNewScan } = useContext(LocationContext);
+  const { locations, refreshLocations, postNewScan } = useContext(LocationContext);
 
-  // Request camera permission
   useEffect(() => {
     const requestPermission = async () => {
       const { status } = await BarCodeScanner.requestPermissionsAsync();
@@ -48,18 +47,15 @@ export default function QRScanner() {
   }, []);
 
   const handleScan = async (projectId, locationId) => {
-    const alreadyScanned = scannedLocations.some(loc => loc.location_id === locationId);
-
-    if (alreadyScanned) {
-      Alert.alert('Already Scanned', 'You have already scanned this location!');
-      return;
-    }
-
     try {
-      // Use postNewScan from LocationContext
-      await postNewScan(locationId, projectId);
-      await refreshLocations(projectId);
-      Alert.alert('Success', 'Location scanned successfully!');
+      const scanSuccess = await postNewScan(locationId, projectId);
+
+      if (scanSuccess) {
+        Alert.alert('Success', 'New location unlocked!');
+        refreshLocations(projectId);
+      } else {
+        Alert.alert('Already Scanned', 'You have already unlocked this location!');
+      }
     } catch (error) {
       console.error('Error adding tracking:', error);
       Alert.alert('Error', 'Could not add tracking for the scanned location.');

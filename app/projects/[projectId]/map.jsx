@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { StyleSheet, Text, SafeAreaView, Appearance, View, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useContext, useRef } from 'react';
+import { StyleSheet, Text, SafeAreaView, TouchableOpacity, Alert, Appearance } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import MapView, { Circle, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { useLocalSearchParams } from 'expo-router';
+import { getDistance } from 'geolib';
 import { LocationContext } from '../../context/LocationContext';
-import LocationPopup from '../../components/LocationPopup';  
+import LocationPopup from '../../components/LocationPopup';
 import { Feather } from '@expo/vector-icons';
-import { deleteScannedLocations } from '../../services/api';
 import { ProjectContext } from '../../context/ProjectContext';
+import { DataContext } from '../../context/DataContext';
+import { deleteScannedLocations } from '../../services/api';
 
 const styles = StyleSheet.create({
   container: {
@@ -54,12 +56,14 @@ const circleColor = colorScheme === 'dark'
   : 'rgba(255, 105, 180, 0.5)';
 
 export default function ShowMap() {
-  const { projectId } = ProjectContext
-  const { locations, scannedLocations, loading, refreshLocations } = useContext(LocationContext); 
+  const { projectId } = useContext(ProjectContext);
+  const { user } = useContext(DataContext);
+  const { locations, scannedLocations, loading, refreshLocations, postNewScan } = useContext(LocationContext);
   const [initialRegion, setInitialRegion] = useState(null);
-  const [userLocation, setUserLocation] = useState(null);
   const [popupVisible, setPopupVisible] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const isCheckingProximity = useRef(false);  // Ref to prevent duplicate checks
+  const userLocationRef = useRef(null);  // Ref to store user location
 
   // Refresh locations when projectId changes
   useEffect(() => {
@@ -78,7 +82,7 @@ export default function ShowMap() {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         };
-        setUserLocation(userLocation);
+        userLocationRef.current = userLocation;  // Store in ref
         setInitialRegion({
           latitude: userLocation.latitude,
           longitude: userLocation.longitude,
@@ -90,22 +94,68 @@ export default function ShowMap() {
     requestLocationPermission();
   }, []);
 
-  const handleLocationPress = (location) => {
-    setSelectedLocation(location);  
-    setPopupVisible(true);  
-  };
+  // Check proximity without rerendering
+  const checkProximity = async () => {
+    console.log('Checking proximity...');
+    if (isCheckingProximity.current || !userLocationRef.current) return;
+    isCheckingProximity.current = true;
+    const winRadius = 100;
 
-  // Parse and filter scanned locations
-  const scannedLocationDetails = locations
-    .filter(loc => scannedLocations.some(scanned => scanned.location_id === loc.id))
-    .map(location => {
+    for (let location of locations) {
       const [longitude, latitude] = location.location_position
         .replace(/[()]/g, '')
         .split(',')
         .map(coord => parseFloat(coord));
+
+      const locationCoords = { latitude, longitude };
+      const distance = getDistance(userLocationRef.current, locationCoords);
+
+      if (distance <= winRadius) {
+        const newScan = await postNewScan(location.id, projectId);
+
+        if (newScan) {
+          Alert.alert('New Location Unlocked!', `You are within ${winRadius} meters of ${location.location_name}`);
+        } else {
+          console.log('Location already scanned for this user and project.');
+        }
+        break;
+      }
+    }
+    isCheckingProximity.current = false;
+  };
+
+  // Track user location only when map tab is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      const interval = setInterval(async () => {
+        const location = await Location.getCurrentPositionAsync({});
+        const userCoords = {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        };
+        userLocationRef.current = userCoords;
+        checkProximity();
+      }, 5000);
+
+      return () => clearInterval(interval);
+    }, [])
+  );
+
+  const handleLocationPress = (location) => {
+    setSelectedLocation(location);
+    setPopupVisible(true);
+  };
+
+  const scannedLocationDetails = locations
+    .filter((loc) => scannedLocations.some((scanned) => scanned.location_id === loc.id))
+    .map((location) => {
+      const [longitude, latitude] = location.location_position
+        .replace(/[()]/g, '')
+        .split(',')
+        .map((coord) => parseFloat(coord));
       return {
         ...location,
-        coordinates: { latitude, longitude }
+        coordinates: { latitude, longitude },
       };
     });
 
@@ -121,10 +171,10 @@ export default function ShowMap() {
     <>
       <MapView
         initialRegion={initialRegion}
-        showsUserLocation={!!userLocation}
+        showsUserLocation={!!userLocationRef.current}
         style={styles.container}
       >
-        {scannedLocationDetails.map(location => (
+        {scannedLocationDetails.map((location) => (
           <React.Fragment key={location.id}>
             <Circle
               center={location.coordinates}
@@ -132,15 +182,14 @@ export default function ShowMap() {
               fillColor={circleColor}
               strokeColor="#ff69b4"
             />
-            <Marker
-              coordinate={location.coordinates}
-              onPress={() => handleLocationPress(location)}
+            <Marker 
+              coordinate={location.coordinates} 
+              onPress={() => handleLocationPress(location)} 
             />
           </React.Fragment>
         ))}
       </MapView>
 
-      {/* Refresh Button */}
       <TouchableOpacity
         style={styles.refreshButton}
         onPress={() => refreshLocations(projectId)}
@@ -148,18 +197,16 @@ export default function ShowMap() {
         <Feather name="refresh-cw" size={24} color="#fff" />
       </TouchableOpacity>
 
-      {/* Delete All Locations Button */}
       <TouchableOpacity
         style={styles.deleteButton}
         onPress={() => {
-          deleteScannedLocations(projectId);
-          refreshLocations(projectId);  // Refresh context after deletion
+          deleteScannedLocations(projectId, user);
+          refreshLocations(projectId);
         }}
       >
         <Feather name="trash" size={24} color="#fff" />
       </TouchableOpacity>
 
-      {/* Location Popup */}
       <LocationPopup
         visible={popupVisible}
         location={selectedLocation}

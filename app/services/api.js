@@ -194,14 +194,19 @@ export async function getScannedLocations(projectId, user) {
 }
 
 /**
- * Deletes scanned locations for the current user in a specified project.
+ * Deletes scanned locations for the specified user in a specific project.
  * 
  * @param {string} projectId - The ID of the project.
+ * @param {string} participantUsername - The username of the participant whose scanned locations will be deleted.
  * @returns {Promise<null>} - Returns null upon successful deletion.
  */
 export async function deleteScannedLocations(projectId, participantUsername) {
-  return apiRequest(`/tracking?project_id=eq.${projectId}&username=eq.${USERNAME}`, 'DELETE');
+  return apiRequest(
+    `/tracking?project_id=eq.${projectId}&participant_username=eq.${participantUsername}&username=eq.${USERNAME}`, 
+    'DELETE'
+  );
 }
+
 
 /**
  * Retrieves the count of unique participants for a specific project.

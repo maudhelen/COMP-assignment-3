@@ -4,7 +4,7 @@ import { getScannedLocations, addScannedLocation } from '../services/api';
 export const DataContext = createContext();
 
 export const DataProvider = ({ children }) => {
-  const [user, setUser] = useState('');
+  const [user, setUser] = useState('Guest');
   const [userAvatar, setUserAvatar] = useState(null);
 
   return (
