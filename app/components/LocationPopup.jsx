@@ -1,11 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Modal, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { Text } from 'react-native-paper';
 import RenderHTML from 'react-native-render-html';
+import { getUniqueParticipantCountForLocation } from '../services/api';  // Define this in api.js
 
 export default function LocationPopup({ visible, location, onClose }) {
   const contentWidth = Dimensions.get('window').width;
-  const maxHeight = Dimensions.get('window').height * 0.7; // Set max height to 70% of the screen
+  const maxHeight = Dimensions.get('window').height * 0.7;
+  const [participantCount, setParticipantCount] = useState(0);
+
+  useEffect(() => {
+    const fetchParticipantCount = async () => {
+      if (location) {
+        try {
+          const count = await getUniqueParticipantCountForLocation(location.id, location.project_id);
+          setParticipantCount(count);
+        } catch (error) {
+          console.error('Error fetching participant count:', error);
+        }
+      }
+    };
+
+    if (visible) fetchParticipantCount();
+  }, [visible, location]);
 
   if (!location) return null;
 
@@ -20,21 +37,18 @@ export default function LocationPopup({ visible, location, onClose }) {
         <View style={styles.popup}>
           <ScrollView
             contentContainerStyle={styles.scrollView}
-            style={{ maxHeight }}  // Limit the scrollable area
+            style={{ maxHeight }}
           >
-            {/* Location Name */}
             <Text style={styles.title}>{location.location_name}</Text>
 
-            {/* Render HTML content */}
             <RenderHTML
-              contentWidth={contentWidth - 40} // Adjust content width to fit the modal padding
+              contentWidth={contentWidth - 40}
               source={{ html: location.location_content }}
               tagsStyles={htmlStyles}
             />
-            {/* Display the score form the location*/}
-            <Text style={styles.title}>Score: {location.score_points}</Text>
+            <Text style={styles.subtitle}>Score: {location.score_points}</Text>
+            <Text style={styles.subtitle}>Participants: {participantCount}</Text>
 
-            {/* Close Button */}
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
               <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
@@ -51,17 +65,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 40, // Add padding from top and bottom of the screen
+    paddingVertical: 40,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   popup: {
     width: '90%',
-    maxHeight: '80%', // Limit the maximum height of the popup
+    maxHeight: '80%',
     padding: 20,
     backgroundColor: '#fff',
     borderRadius: 10,
     alignItems: 'center',
-    overflow: 'hidden', // Prevent overflow
+    overflow: 'hidden',
   },
   title: {
     fontSize: 24,
@@ -70,8 +84,15 @@ const styles = StyleSheet.create({
     color: '#ff69b4',
     textAlign: 'center',
   },
+  subtitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginVertical: 5,
+    textAlign: 'center',
+  },
   scrollView: {
-    paddingBottom: 20, // Add padding at the bottom
+    paddingBottom: 20,
   },
   closeButton: {
     marginTop: 20,
@@ -85,7 +106,6 @@ const styles = StyleSheet.create({
   },
 });
 
-// HTML tag styles
 const htmlStyles = {
   img: {
     width: '100%',

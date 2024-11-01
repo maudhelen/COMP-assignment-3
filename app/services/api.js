@@ -229,3 +229,16 @@ export async function getUniqueParticipantCount(projectId) {
     throw error;
   }
 }
+
+// In services/api.js
+export async function getUniqueParticipantCountForLocation(locationId, projectId) {
+  try {
+    const trackingData = await apiRequest(`/tracking?location_id=eq.${locationId}&project_id=eq.${projectId}`);
+    console.log("Tracking Data for locaiton:", trackingData);
+    const uniqueParticipants = new Set(trackingData.map(entry => entry.participant_username));
+    return uniqueParticipants.size; // Returns the unique participant count
+  } catch (error) {
+    console.error('Error fetching unique participant count for location:', error);
+    throw error;
+  }
+}
